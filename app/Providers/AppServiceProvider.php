@@ -23,6 +23,11 @@ use App\Repositories\CustomerRepository;
 use App\Repositories\Interfaces\CustomerRepositoryInterface;
 use App\Repositories\Contracts\PurchaseRepositoryInterface;
 use App\Repositories\PurchaseRepository;
+// Roles & Permissions
+use App\Interfaces\RoleRepositoryInterface;
+use App\Repositories\RoleRepository;
+use App\Interfaces\PermissionRepositoryInterface;
+use App\Repositories\PermissionRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -72,6 +77,16 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             PurchaseRepositoryInterface::class,
             PurchaseRepository::class
+        );
+
+        // ── Roles & Permissions ───────────────────────────────────
+        $this->app->bind(
+            RoleRepositoryInterface::class,
+            RoleRepository::class
+        );
+        $this->app->bind(
+            PermissionRepositoryInterface::class,
+            PermissionRepository::class
         );
     }
 
