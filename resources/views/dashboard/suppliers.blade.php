@@ -9,9 +9,9 @@
 @section('content')
 <div class="page-header d-flex align-items-center justify-content-between">
     <div><h1>Suppliers</h1><p>Manage your suppliers</p></div>
-    <button class="btn-primary-custom" onclick="openCreateModal()">
-        <i class="bi bi-plus-lg"></i> Add Supplier
-    </button>
+    @can('suppliers.create')
+        <button class="btn-primary-custom" onclick="openCreateModal()"><i class="bi bi-plus-lg"></i> Add Supplier</button>
+    @endcan
 </div>
 
 <div class="card">
@@ -136,9 +136,9 @@ function renderTable(items) {
                 <td style="font-weight:600;color:var(--primary);">${formatCurrency(s.credit_limit)}</td>
                 <td>${statusBadge(s.status)}</td>
                 <td>
-                    <button class="btn-sm-icon btn-view me-1" onclick="viewSupplier(${s.id})" title="View"><i class="bi bi-eye"></i></button>
-                    <button class="btn-sm-icon btn-edit me-1" onclick="editSupplier(${s.id})" title="Edit"><i class="bi bi-pencil"></i></button>
-                    <button class="btn-sm-icon btn-delete" onclick="deleteSupplier(${s.id},'${s.company_name}')" title="Delete"><i class="bi bi-trash"></i></button>
+                    ${canPermission('suppliers.view-details') ? `<button class="btn-sm-icon btn-view me-1" onclick="viewSupplier(${s.id})" title="View"><i class="bi bi-eye"></i></button>` : ''}
+                    ${canPermission('suppliers.edit') ? `<button class="btn-sm-icon btn-edit me-1" onclick="editSupplier(${s.id})" title="Edit"><i class="bi bi-pencil"></i></button>` : ''}
+                    ${canPermission('suppliers.delete') ? `<button class="btn-sm-icon btn-delete" onclick="deleteSupplier(${s.id},'${s.company_name}')" title="Delete"><i class="bi bi-trash"></i></button>` : ''}
                 </td>
             </tr>`).join('')}
             </tbody>

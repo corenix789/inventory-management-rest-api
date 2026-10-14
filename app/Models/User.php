@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Notifications\ResetPasswordNotification;
+use App\Notifications\VerifyEmailNotification;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Notifications\ResetPasswordNotification;
-use App\Notifications\VerifyEmailNotification;
+use Illuminate\Support\Collection;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password'])]
@@ -20,6 +21,16 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    protected static function booted(): void
+    {
+        static::created(function (User $user): void {
+            $defaultRole = Role::active()->where('is_default', true)->first();
+            if ($defaultRole) {
+                $user->roles()->syncWithoutDetaching([$defaultRole->id]);
+            }
+        });
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -30,7 +41,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
+            'password' => 'hashed',
         ];
     }
 
@@ -44,7 +55,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'user_role')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -57,9 +68,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hasRole(string $role): bool
     {
         return $this->roles()
-                    ->where('slug', $role)
-                    ->orWhere('name', $role)
-                    ->exists();
+            ->where(function ($query) use ($role) {
+                $query->where('slug', $role)->orWhere('name', $role);
+            })
+            ->where('roles.status', true)
+            ->exists();
     }
 
     /**
@@ -68,9 +81,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hasAnyRole(array $roles): bool
     {
         return $this->roles()
-                    ->whereIn('slug', $roles)
-                    ->orWhereIn('name', $roles)
-                    ->exists();
+            ->where(function ($query) use ($roles) {
+                $query->whereIn('slug', $roles)->orWhereIn('name', $roles);
+            })
+            ->where('roles.status', true)
+            ->exists();
     }
 
     /**
@@ -78,17 +93,16 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function hasPermission(string $permission): bool
     {
-        // Admin bypass — admin role has all permissions
-        if ($this->hasRole('admin')) {
-            return true;
-        }
-
         return $this->roles()
-                    ->whereHas('permissions', function ($query) use ($permission) {
-                        $query->where('slug', $permission)
-                              ->orWhere('name', $permission);
-                    })
-                    ->exists();
+            ->where('roles.status', true)
+            ->whereHas('permissions', function ($query) use ($permission) {
+                $query->where('permissions.status', true)
+                    ->where(function ($permissionQuery) use ($permission) {
+                        $permissionQuery->where('slug', $permission)
+                            ->orWhere('name', $permission);
+                    });
+            })
+            ->exists();
     }
 
     /**
@@ -101,13 +115,16 @@ class User extends Authenticatable implements MustVerifyEmail
                 return false;
             }
         }
+
         return true;
     }
 
     /**
      * Assign a role to the user.
+     *
+     * Accepts a Role model instance, a slug/name string, or an integer ID.
      */
-    public function assignRole(string|int $role): void
+    public function assignRole(Role|string|int $role): void
     {
         if (is_string($role)) {
             $role = Role::where('slug', $role)->orWhere('name', $role)->firstOrFail();
@@ -131,14 +148,15 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all permission slugs for this user (through their roles).
      */
-    public function getAllPermissions(): \Illuminate\Support\Collection
+    public function getAllPermissions(): Collection
     {
         return $this->roles()
-                    ->with('permissions')
-                    ->get()
-                    ->flatMap(fn ($role) => $role->permissions)
-                    ->unique('id')
-                    ->values();
+            ->with('permissions')
+            ->where('roles.status', true)
+            ->get()
+            ->flatMap(fn ($role) => $role->permissions->where('status', true))
+            ->unique('id')
+            ->values();
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -153,6 +171,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new VerifyEmailNotification());
+        $this->notify(new VerifyEmailNotification);
     }
 }

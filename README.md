@@ -40,6 +40,26 @@ The goal of this project is to demonstrate professional Laravel backend architec
 - Password Hashing
 - API Token Authentication
 
+## ✅ Role-Based Access Control
+
+- Multi-role users and role-permission assignments
+- `module.action` permissions enforced on dashboard pages and Sanctum API CRUD routes
+- Seeded Administrator, Inventory Manager, Purchase Manager, and read-only Viewer roles
+- Dashboard role/permission matrix and user-role assignment pages
+- New registrations receive only the read-only Viewer role; existing users are never promoted automatically
+
+Run `php artisan db:seed --class=RbacSeeder` (or `php artisan db:seed`) to safely create/update the RBAC catalog.
+No existing account receives administrator access automatically. Assign an administrator to a trusted existing user explicitly:
+
+```php
+$user = App\Models\User::where('email', 'trusted-admin@example.com')->firstOrFail();
+$user->assignRole('admin');
+```
+
+The initial trusted administrator assignment can be performed with `php artisan tinker`. The account must already exist; this process does not create or change passwords.
+
+Run `php artisan test --filter=RbacAuthorizationTest` to execute the RBAC authorization feature tests.
+
 ---
 
 ## ✅ Category Module
@@ -70,7 +90,6 @@ The goal of this project is to demonstrate professional Laravel backend architec
 - Reports
 - Dashboard APIs
 - Notifications
-- Roles & Permissions
 - Activity Logs
 
 ---

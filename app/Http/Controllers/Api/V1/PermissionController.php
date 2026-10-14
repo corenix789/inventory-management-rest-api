@@ -8,6 +8,7 @@ use App\Http\Requests\UpdatePermissionRequest;
 use App\Http\Resources\PermissionResource;
 use App\Services\PermissionService;
 use App\Traits\ApiResponseTrait;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -23,19 +24,15 @@ class PermissionController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        try {
-            $filters = $request->only(['search', 'status', 'module']);
-            $perPage = (int) $request->get('per_page', 50);
+        $filters = $request->only(['search', 'status', 'module']);
+        $perPage = (int) $request->get('per_page', 50);
 
-            $permissions = $this->permissionService->getPaginatedPermissions($perPage, $filters);
+        $permissions = $this->permissionService->getPaginatedPermissions($perPage, $filters);
 
-            return $this->success(
-                PermissionResource::collection($permissions)->response()->getData(true),
-                'Permissions retrieved successfully'
-            );
-        } catch (\Throwable $e) {
-            return $this->error('Failed to retrieve permissions', 500);
-        }
+        return $this->success(
+            PermissionResource::collection($permissions)->response()->getData(true),
+            'Permissions retrieved successfully'
+        );
     }
 
     /**
@@ -44,12 +41,9 @@ class PermissionController extends Controller
      */
     public function store(StorePermissionRequest $request): JsonResponse
     {
-        try {
-            $permission = $this->permissionService->createPermission($request->validated());
-            return $this->created(new PermissionResource($permission), 'Permission created successfully');
-        } catch (\Throwable $e) {
-            return $this->error('Failed to create permission: ' . $e->getMessage(), 500);
-        }
+        $permission = $this->permissionService->createPermission($request->validated());
+
+        return $this->created(new PermissionResource($permission), 'Permission created successfully');
     }
 
     /**
@@ -60,11 +54,10 @@ class PermissionController extends Controller
     {
         try {
             $perm = $this->permissionService->getPermissionById($permission);
+
             return $this->success(new PermissionResource($perm), 'Permission retrieved successfully');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+        } catch (ModelNotFoundException) {
             return $this->notFound('Permission not found');
-        } catch (\Throwable $e) {
-            return $this->error('Failed to retrieve permission', 500);
         }
     }
 
@@ -76,11 +69,10 @@ class PermissionController extends Controller
     {
         try {
             $updated = $this->permissionService->updatePermission($permission, $request->validated());
+
             return $this->success(new PermissionResource($updated), 'Permission updated successfully');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+        } catch (ModelNotFoundException) {
             return $this->notFound('Permission not found');
-        } catch (\Throwable $e) {
-            return $this->error('Failed to update permission: ' . $e->getMessage(), 500);
         }
     }
 
@@ -92,11 +84,10 @@ class PermissionController extends Controller
     {
         try {
             $this->permissionService->deletePermission($permission);
+
             return $this->deleted('Permission deleted successfully');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+        } catch (ModelNotFoundException) {
             return $this->notFound('Permission not found');
-        } catch (\Throwable $e) {
-            return $this->error('Failed to delete permission: ' . $e->getMessage(), 500);
         }
     }
 
@@ -106,12 +97,9 @@ class PermissionController extends Controller
      */
     public function grouped(): JsonResponse
     {
-        try {
-            $grouped = $this->permissionService->getGroupedByModule();
-            $result = $grouped->map(fn ($perms) => PermissionResource::collection($perms));
-            return $this->success($result, 'Grouped permissions retrieved successfully');
-        } catch (\Throwable $e) {
-            return $this->error('Failed to retrieve grouped permissions', 500);
-        }
+        $grouped = $this->permissionService->getGroupedByModule();
+        $result = $grouped->map(fn ($perms) => PermissionResource::collection($perms));
+
+        return $this->success($result, 'Grouped permissions retrieved successfully');
     }
 }

@@ -12,9 +12,9 @@
         <h1>Categories</h1>
         <p>Manage product categories</p>
     </div>
-    <button class="btn-primary-custom" onclick="openCreateModal()">
-        <i class="bi bi-plus-lg"></i> Add Category
-    </button>
+    @can('categories.create')
+        <button class="btn-primary-custom" onclick="openCreateModal()"><i class="bi bi-plus-lg"></i> Add Category</button>
+    @endcan
 </div>
 
 <div class="card">
@@ -110,8 +110,8 @@ function renderTable(items) {
                         <td>${statusBadge(c.status)}</td>
                         <td class="text-muted">${formatDate(c.created_at)}</td>
                         <td>
-                            <button class="btn-sm-icon btn-edit me-1" onclick="editCategory(${c.id})" title="Edit"><i class="bi bi-pencil"></i></button>
-                            <button class="btn-sm-icon btn-delete" onclick="deleteCategory(${c.id},'${c.name}')" title="Delete"><i class="bi bi-trash"></i></button>
+                            ${canPermission('categories.edit') ? `<button class="btn-sm-icon btn-edit me-1" onclick="editCategory(${c.id})" title="Edit"><i class="bi bi-pencil"></i></button>` : ''}
+                            ${canPermission('categories.delete') ? `<button class="btn-sm-icon btn-delete" onclick="deleteCategory(${c.id},'${c.name}')" title="Delete"><i class="bi bi-trash"></i></button>` : ''}
                         </td>
                     </tr>`).join('')}
                 </tbody>

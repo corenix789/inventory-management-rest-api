@@ -9,9 +9,9 @@
 @section('content')
 <div class="page-header d-flex align-items-center justify-content-between">
     <div><h1>Taxes</h1><p>Manage tax rates and types</p></div>
-    <button class="btn-primary-custom" onclick="openCreateModal()">
-        <i class="bi bi-plus-lg"></i> Add Tax
-    </button>
+    @can('taxes.create')
+        <button class="btn-primary-custom" onclick="openCreateModal()"><i class="bi bi-plus-lg"></i> Add Tax</button>
+    @endcan
 </div>
 
 <div class="card">
@@ -114,8 +114,8 @@ function renderTable(items) {
                 <td class="text-muted">${t.description || '—'}</td>
                 <td>${statusBadge(t.status)}</td>
                 <td>
-                    <button class="btn-sm-icon btn-edit me-1" onclick="editTax(${t.id})"><i class="bi bi-pencil"></i></button>
-                    <button class="btn-sm-icon btn-delete" onclick="deleteTax(${t.id},'${t.name}')"><i class="bi bi-trash"></i></button>
+                    ${canPermission('taxes.edit') ? `<button class="btn-sm-icon btn-edit me-1" onclick="editTax(${t.id})"><i class="bi bi-pencil"></i></button>` : ''}
+                    ${canPermission('taxes.delete') ? `<button class="btn-sm-icon btn-delete" onclick="deleteTax(${t.id},'${t.name}')"><i class="bi bi-trash"></i></button>` : ''}
                 </td>
             </tr>`).join('')}
             </tbody>

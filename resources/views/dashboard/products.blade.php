@@ -9,9 +9,9 @@
 @section('content')
 <div class="page-header d-flex align-items-center justify-content-between">
     <div><h1>Products</h1><p>Manage your product catalog</p></div>
-    <button class="btn-primary-custom" onclick="openCreateModal()">
-        <i class="bi bi-plus-lg"></i> Add Product
-    </button>
+    @can('products.create')
+        <button class="btn-primary-custom" onclick="openCreateModal()"><i class="bi bi-plus-lg"></i> Add Product</button>
+    @endcan
 </div>
 
 <!-- Summary Row -->
@@ -248,9 +248,9 @@ function renderTable(items) {
                 </td>
                 <td>${statusBadge(p.status)}</td>
                 <td>
-                    <button class="btn-sm-icon btn-view me-1" onclick="viewProduct(${p.id})" title="View"><i class="bi bi-eye"></i></button>
-                    <button class="btn-sm-icon btn-edit me-1" onclick="editProduct(${p.id})" title="Edit"><i class="bi bi-pencil"></i></button>
-                    <button class="btn-sm-icon btn-delete" onclick="deleteProduct(${p.id},'${p.name.replace(/'/g,"\\'")}')" title="Delete"><i class="bi bi-trash"></i></button>
+                    ${canPermission('products.view-details') ? `<button class="btn-sm-icon btn-view me-1" onclick="viewProduct(${p.id})" title="View"><i class="bi bi-eye"></i></button>` : ''}
+                    ${canPermission('products.edit') ? `<button class="btn-sm-icon btn-edit me-1" onclick="editProduct(${p.id})" title="Edit"><i class="bi bi-pencil"></i></button>` : ''}
+                    ${canPermission('products.delete') ? `<button class="btn-sm-icon btn-delete" onclick="deleteProduct(${p.id},'${p.name.replace(/'/g,"\\'")}')" title="Delete"><i class="bi bi-trash"></i></button>` : ''}
                 </td>
             </tr>`).join('')}
             </tbody>

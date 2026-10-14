@@ -9,9 +9,9 @@
 @section('content')
 <div class="page-header d-flex align-items-center justify-content-between">
     <div><h1>Customers</h1><p>Manage customer accounts</p></div>
-    <button class="btn-primary-custom" onclick="openCreateModal()">
-        <i class="bi bi-plus-lg"></i> Add Customer
-    </button>
+    @can('customers.create')
+        <button class="btn-primary-custom" onclick="openCreateModal()"><i class="bi bi-plus-lg"></i> Add Customer</button>
+    @endcan
 </div>
 
 <div class="card">
@@ -134,8 +134,8 @@ function renderTable(items) {
                 <td style="font-weight:600;color:var(--teal,#14b8a6);">${formatCurrency(c.current_balance||c.opening_balance)}</td>
                 <td>${statusBadge(c.status)}</td>
                 <td>
-                    <button class="btn-sm-icon btn-edit me-1" onclick="editCustomer(${c.id})"><i class="bi bi-pencil"></i></button>
-                    <button class="btn-sm-icon btn-delete" onclick="deleteCustomer(${c.id},'${c.name}')"><i class="bi bi-trash"></i></button>
+                    ${canPermission('customers.edit') ? `<button class="btn-sm-icon btn-edit me-1" onclick="editCustomer(${c.id})"><i class="bi bi-pencil"></i></button>` : ''}
+                    ${canPermission('customers.delete') ? `<button class="btn-sm-icon btn-delete" onclick="deleteCustomer(${c.id},'${c.name}')"><i class="bi bi-trash"></i></button>` : ''}
                 </td>
             </tr>`).join('')}
             </tbody>

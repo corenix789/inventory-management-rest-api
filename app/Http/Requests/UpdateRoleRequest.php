@@ -16,15 +16,14 @@ class UpdateRoleRequest extends FormRequest
         $id = $this->route('role');
 
         return [
-            'name'         => "sometimes|required|string|max:100|unique:roles,name,{$id}",
-            'slug'         => "sometimes|nullable|string|max:100|unique:roles,slug,{$id}",
+            'name' => "sometimes|required|string|max:100|unique:roles,name,{$id}",
+            'slug' => "sometimes|nullable|string|max:100|unique:roles,slug,{$id}",
             'display_name' => 'sometimes|nullable|string|max:100',
-            'description'  => 'sometimes|nullable|string|max:500',
-            'color'        => 'sometimes|nullable|string|max:20',
-            'is_default'   => 'sometimes|nullable|boolean',
-            'status'       => 'sometimes|nullable|boolean',
-            'permissions'  => 'sometimes|nullable|array',
-            'permissions.*'=> 'integer|exists:permissions,id',
+            'description' => 'sometimes|nullable|string|max:500',
+            'color' => 'sometimes|nullable|string|max:20',
+            'status' => 'sometimes|boolean',
+            'permissions' => 'sometimes|nullable|array',
+            'permissions.*' => 'integer|exists:permissions,id',
         ];
     }
 }

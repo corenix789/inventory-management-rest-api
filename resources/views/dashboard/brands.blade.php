@@ -9,9 +9,9 @@
 @section('content')
 <div class="page-header d-flex align-items-center justify-content-between">
     <div><h1>Brands</h1><p>Manage product brands</p></div>
-    <button class="btn-primary-custom" onclick="openCreateModal()">
-        <i class="bi bi-plus-lg"></i> Add Brand
-    </button>
+    @can('brands.create')
+        <button class="btn-primary-custom" onclick="openCreateModal()"><i class="bi bi-plus-lg"></i> Add Brand</button>
+    @endcan
 </div>
 
 <div class="card">
@@ -98,8 +98,8 @@ function renderTable(items) {
                     <td>${statusBadge(b.status)}</td>
                     <td class="text-muted">${formatDate(b.created_at)}</td>
                     <td>
-                        <button class="btn-sm-icon btn-edit me-1" onclick="editBrand(${b.id})"><i class="bi bi-pencil"></i></button>
-                        <button class="btn-sm-icon btn-delete" onclick="deleteBrand(${b.id},'${b.name}')"><i class="bi bi-trash"></i></button>
+                        ${canPermission('brands.edit') ? `<button class="btn-sm-icon btn-edit me-1" onclick="editBrand(${b.id})"><i class="bi bi-pencil"></i></button>` : ''}
+                        ${canPermission('brands.delete') ? `<button class="btn-sm-icon btn-delete" onclick="deleteBrand(${b.id},'${b.name}')"><i class="bi bi-trash"></i></button>` : ''}
                     </td>
                 </tr>`).join('')}
                 </tbody>

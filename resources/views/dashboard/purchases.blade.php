@@ -9,9 +9,11 @@
 @section('content')
 <div class="page-header d-flex align-items-center justify-content-between">
     <div><h1>Purchases</h1><p>Manage purchase orders and invoices</p></div>
+    @can('purchases.create')
     <button class="btn-primary-custom" onclick="openCreateModal()">
         <i class="bi bi-plus-lg"></i> New Purchase
     </button>
+    @endcan
 </div>
 
 <!-- Summary Cards -->
@@ -217,9 +219,9 @@ function renderTable(items) {
                 <td>${payBadge(p.payment_status)}</td>
                 <td>${statusBadgeP(p.status)}</td>
                 <td>
-                    <button class="btn-sm-icon btn-view me-1" onclick="viewPurchase(${p.id})" title="View"><i class="bi bi-eye"></i></button>
-                    <button class="btn-sm-icon btn-edit me-1" onclick="editPurchase(${p.id})" title="Edit"><i class="bi bi-pencil"></i></button>
-                    <button class="btn-sm-icon btn-delete" onclick="deletePurchase(${p.id},'${p.purchase_number||'PO-'+p.id}')" title="Delete"><i class="bi bi-trash"></i></button>
+                    ${canPermission('purchases.view-details') ? `<button class="btn-sm-icon btn-view me-1" onclick="viewPurchase(${p.id})" title="View"><i class="bi bi-eye"></i></button>` : ''}
+                    ${canPermission('purchases.edit') ? `<button class="btn-sm-icon btn-edit me-1" onclick="editPurchase(${p.id})" title="Edit"><i class="bi bi-pencil"></i></button>` : ''}
+                    ${canPermission('purchases.delete') ? `<button class="btn-sm-icon btn-delete" onclick="deletePurchase(${p.id},'${p.purchase_number||'PO-'+p.id}')" title="Delete"><i class="bi bi-trash"></i></button>` : ''}
                 </td>
             </tr>`).join('')}
             </tbody>

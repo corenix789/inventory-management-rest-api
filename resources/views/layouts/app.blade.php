@@ -620,57 +620,40 @@
     </a>
 
     <nav class="sidebar-nav">
-        <div class="nav-section-label">Main</div>
+        @can('dashboard.view')
+            <div class="nav-section-label">Main</div>
+            <a href="{{ route('dashboard.index') }}" class="sidebar-link {{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
+                <i class="bi bi-grid-1x2"></i><span class="link-text">Dashboard</span>
+            </a>
+        @endcan
 
-        <a href="{{ route('dashboard.index') }}" class="sidebar-link {{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
-            <i class="bi bi-grid-1x2"></i>
-            <span class="link-text">Dashboard</span>
-        </a>
+        @canany(['products.view', 'categories.view', 'brands.view', 'units.view', 'taxes.view', 'warehouses.view'])
+            <div class="nav-section-label">Inventory</div>
+            @can('products.view')<a href="{{ route('dashboard.products') }}" class="sidebar-link {{ request()->routeIs('dashboard.products') ? 'active' : '' }}"><i class="bi bi-box-seam"></i><span class="link-text">Products</span></a>@endcan
+            @can('categories.view')<a href="{{ route('dashboard.categories') }}" class="sidebar-link {{ request()->routeIs('dashboard.categories') ? 'active' : '' }}"><i class="bi bi-tag"></i><span class="link-text">Categories</span></a>@endcan
+            @can('brands.view')<a href="{{ route('dashboard.brands') }}" class="sidebar-link {{ request()->routeIs('dashboard.brands') ? 'active' : '' }}"><i class="bi bi-award"></i><span class="link-text">Brands</span></a>@endcan
+            @can('units.view')<a href="{{ route('dashboard.units') }}" class="sidebar-link {{ request()->routeIs('dashboard.units') ? 'active' : '' }}"><i class="bi bi-rulers"></i><span class="link-text">Units</span></a>@endcan
+            @can('taxes.view')<a href="{{ route('dashboard.taxes') }}" class="sidebar-link {{ request()->routeIs('dashboard.taxes') ? 'active' : '' }}"><i class="bi bi-percent"></i><span class="link-text">Taxes</span></a>@endcan
+            @can('warehouses.view')<a href="{{ route('dashboard.warehouses') }}" class="sidebar-link {{ request()->routeIs('dashboard.warehouses') ? 'active' : '' }}"><i class="bi bi-building"></i><span class="link-text">Warehouses</span></a>@endcan
+        @endcanany
 
-        <div class="nav-section-label">Inventory</div>
+        @canany(['suppliers.view', 'customers.view'])
+            <div class="nav-section-label">People</div>
+            @can('suppliers.view')<a href="{{ route('dashboard.suppliers') }}" class="sidebar-link {{ request()->routeIs('dashboard.suppliers') ? 'active' : '' }}"><i class="bi bi-truck"></i><span class="link-text">Suppliers</span></a>@endcan
+            @can('customers.view')<a href="{{ route('dashboard.customers') }}" class="sidebar-link {{ request()->routeIs('dashboard.customers') ? 'active' : '' }}"><i class="bi bi-people"></i><span class="link-text">Customers</span></a>@endcan
+        @endcanany
 
-        <a href="{{ route('dashboard.products') }}" class="sidebar-link {{ request()->routeIs('dashboard.products') ? 'active' : '' }}">
-            <i class="bi bi-box-seam"></i>
-            <span class="link-text">Products</span>
-        </a>
-        <a href="{{ route('dashboard.categories') }}" class="sidebar-link {{ request()->routeIs('dashboard.categories') ? 'active' : '' }}">
-            <i class="bi bi-tag"></i>
-            <span class="link-text">Categories</span>
-        </a>
-        <a href="{{ route('dashboard.brands') }}" class="sidebar-link {{ request()->routeIs('dashboard.brands') ? 'active' : '' }}">
-            <i class="bi bi-award"></i>
-            <span class="link-text">Brands</span>
-        </a>
-        <a href="{{ route('dashboard.units') }}" class="sidebar-link {{ request()->routeIs('dashboard.units') ? 'active' : '' }}">
-            <i class="bi bi-rulers"></i>
-            <span class="link-text">Units</span>
-        </a>
-        <a href="{{ route('dashboard.taxes') }}" class="sidebar-link {{ request()->routeIs('dashboard.taxes') ? 'active' : '' }}">
-            <i class="bi bi-percent"></i>
-            <span class="link-text">Taxes</span>
-        </a>
-        <a href="{{ route('dashboard.warehouses') }}" class="sidebar-link {{ request()->routeIs('dashboard.warehouses') ? 'active' : '' }}">
-            <i class="bi bi-building"></i>
-            <span class="link-text">Warehouses</span>
-        </a>
-
-        <div class="nav-section-label">People</div>
-
-        <a href="{{ route('dashboard.suppliers') }}" class="sidebar-link {{ request()->routeIs('dashboard.suppliers') ? 'active' : '' }}">
-            <i class="bi bi-truck"></i>
-            <span class="link-text">Suppliers</span>
-        </a>
-        <a href="{{ route('dashboard.customers') }}" class="sidebar-link {{ request()->routeIs('dashboard.customers') ? 'active' : '' }}">
-            <i class="bi bi-people"></i>
-            <span class="link-text">Customers</span>
-        </a>
-
-        <div class="nav-section-label">Transactions</div>
-
-        <a href="{{ route('dashboard.purchases') }}" class="sidebar-link {{ request()->routeIs('dashboard.purchases') ? 'active' : '' }}">
-            <i class="bi bi-cart-check"></i>
-            <span class="link-text">Purchases</span>
-        </a>
+        @can('purchases.view')
+            <div class="nav-section-label">Transactions</div>
+            <a href="{{ route('dashboard.purchases') }}" class="sidebar-link {{ request()->routeIs('dashboard.purchases') ? 'active' : '' }}"><i class="bi bi-cart-check"></i><span class="link-text">Purchases</span></a>
+        @endcan
+        @can('roles.view')
+            <div class="nav-section-label">Access control</div>
+            <a href="{{ route('dashboard.roles.index') }}" class="sidebar-link {{ request()->routeIs('dashboard.roles.*') ? 'active' : '' }}"><i class="bi bi-shield-lock"></i><span class="link-text">Roles</span></a>
+        @endcan
+        @can('users.view')
+            <a href="{{ route('dashboard.users.index') }}" class="sidebar-link {{ request()->routeIs('dashboard.users.*') ? 'active' : '' }}"><i class="bi bi-person-gear"></i><span class="link-text">User Roles</span></a>
+        @endcan
     </nav>
 
     <div class="sidebar-footer">
@@ -701,7 +684,9 @@
             <h6 class="page-title">@yield('page_title', 'Dashboard')</h6>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-muted text-decoration-none">Home</a></li>
+                    @can('dashboard.view')
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-muted text-decoration-none">Home</a></li>
+                    @endcan
                     @yield('breadcrumb')
                 </ol>
             </nav>
@@ -755,6 +740,9 @@
 
 <!-- ─── MAIN CONTENT ──────────────────────────────────── -->
 <main class="main-content" id="mainContent">
+    @if(session('success'))<div class="alert alert-success alert-dismissible fade show" role="alert">{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>@endif
+    @if(session('error'))<div class="alert alert-danger alert-dismissible fade show" role="alert">{{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>@endif
+    @if($errors->any())<div class="alert alert-danger"><ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
     @yield('content')
 </main>
 
@@ -771,6 +759,9 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
 <script>
+    const RBAC_PERMISSIONS = @json(request()->user()?->getAllPermissions()->pluck('name')->all() ?? []);
+    function canPermission(permission) { return RBAC_PERMISSIONS.includes(permission); }
+
     // ─── API BASE ──────────────────────────────────────────────
     const API_BASE = '/api/v1';
     // Token comes from server-side session (not localStorage)

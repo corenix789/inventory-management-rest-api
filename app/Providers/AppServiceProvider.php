@@ -2,32 +2,34 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use App\Repositories\AuthRepository;
 use App\Interfaces\AuthRepositoryInterface;
-use App\Repositories\CategoryRepository;
-use App\Interfaces\CategoryRepositoryInterface;
-use App\Repositories\ProductRepository;
-use App\Interfaces\ProductRepositoryInterface;
-use App\Repositories\BrandRepository;
 use App\Interfaces\BrandRepositoryInterface;
-use App\Interfaces\UnitRepositoryInterface;
-use App\Repositories\UnitRepository;
+use App\Interfaces\CategoryRepositoryInterface;
+use App\Interfaces\PermissionRepositoryInterface;
+use App\Interfaces\ProductRepositoryInterface;
+use App\Interfaces\RoleRepositoryInterface;
 use App\Interfaces\TaxRepositoryInterface;
-use App\Repositories\TaxRepository;
+use App\Interfaces\UnitRepositoryInterface;
 use App\Interfaces\WarehouseRepositoryInterface;
-use App\Repositories\WarehouseRepository;
-use App\Repositories\Interfaces\SupplierRepositoryInterface;
-use App\Repositories\Eloquent\SupplierRepository;
-use App\Repositories\CustomerRepository;
-use App\Repositories\Interfaces\CustomerRepositoryInterface;
+use App\Models\User;
+use App\Repositories\AuthRepository;
+use App\Repositories\BrandRepository;
+use App\Repositories\CategoryRepository;
 use App\Repositories\Contracts\PurchaseRepositoryInterface;
+use App\Repositories\CustomerRepository;
+use App\Repositories\Eloquent\SupplierRepository;
+use App\Repositories\Interfaces\CustomerRepositoryInterface;
+use App\Repositories\Interfaces\SupplierRepositoryInterface;
+use App\Repositories\PermissionRepository;
+use App\Repositories\ProductRepository;
 use App\Repositories\PurchaseRepository;
 // Roles & Permissions
-use App\Interfaces\RoleRepositoryInterface;
 use App\Repositories\RoleRepository;
-use App\Interfaces\PermissionRepositoryInterface;
-use App\Repositories\PermissionRepository;
+use App\Repositories\TaxRepository;
+use App\Repositories\UnitRepository;
+use App\Repositories\WarehouseRepository;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -51,8 +53,8 @@ class AppServiceProvider extends ServiceProvider
             ProductRepository::class
         );
         $this->app->bind(
-                BrandRepositoryInterface::class,
-                BrandRepository::class
+            BrandRepositoryInterface::class,
+            BrandRepository::class
         );
         $this->app->bind(
             UnitRepositoryInterface::class,
@@ -95,6 +97,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Gate::before(function (User $user, string $ability): ?bool {
+            return str_contains($ability, '.') ? $user->hasPermission($ability) : null;
+        });
     }
 }

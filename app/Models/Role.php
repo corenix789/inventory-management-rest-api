@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Role extends Model
 {
@@ -23,7 +24,7 @@ class Role extends Model
 
     protected $casts = [
         'is_default' => 'boolean',
-        'status'     => 'boolean',
+        'status' => 'boolean',
     ];
 
     // ─────────────────────────────────────────────────────────────
@@ -36,7 +37,7 @@ class Role extends Model
     public function permissions(): BelongsToMany
     {
         return $this->belongsToMany(Permission::class, 'role_permission')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     /**
@@ -45,7 +46,7 @@ class Role extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_role')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -57,14 +58,20 @@ class Role extends Model
      */
     public function hasPermission(string $permission): bool
     {
+        if (! $this->status) {
+            return false;
+        }
+
         return $this->permissions()
-                    ->where('slug', $permission)
-                    ->orWhere('name', $permission)
-                    ->exists();
+            ->where('permissions.status', true)
+            ->where(function ($query) use ($permission) {
+                $query->where('slug', $permission)->orWhere('name', $permission);
+            })
+            ->exists();
     }
 
     /**
-     * Sync permissions by array of IDs or slugs.
+     * Sync permissions by their database IDs.
      */
     public function syncPermissions(array $permissionIds): void
     {
@@ -78,7 +85,7 @@ class Role extends Model
     {
         static::creating(function (Role $role) {
             if (empty($role->slug)) {
-                $role->slug = \Illuminate\Support\Str::slug($role->name);
+                $role->slug = Str::slug($role->name);
             }
         });
     }

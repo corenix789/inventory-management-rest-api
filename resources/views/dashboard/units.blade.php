@@ -9,9 +9,9 @@
 @section('content')
 <div class="page-header d-flex align-items-center justify-content-between">
     <div><h1>Units</h1><p>Manage measurement units</p></div>
-    <button class="btn-primary-custom" onclick="openCreateModal()">
-        <i class="bi bi-plus-lg"></i> Add Unit
-    </button>
+    @can('units.create')
+        <button class="btn-primary-custom" onclick="openCreateModal()"><i class="bi bi-plus-lg"></i> Add Unit</button>
+    @endcan
 </div>
 
 <div class="card">
@@ -100,8 +100,8 @@ function renderTable(items) {
                 <td>${statusBadge(u.status)}</td>
                 <td class="text-muted">${formatDate(u.created_at)}</td>
                 <td>
-                    <button class="btn-sm-icon btn-edit me-1" onclick="editUnit(${u.id})"><i class="bi bi-pencil"></i></button>
-                    <button class="btn-sm-icon btn-delete" onclick="deleteUnit(${u.id},'${u.name}')"><i class="bi bi-trash"></i></button>
+                    ${canPermission('units.edit') ? `<button class="btn-sm-icon btn-edit me-1" onclick="editUnit(${u.id})"><i class="bi bi-pencil"></i></button>` : ''}
+                    ${canPermission('units.delete') ? `<button class="btn-sm-icon btn-delete" onclick="deleteUnit(${u.id},'${u.name}')"><i class="bi bi-trash"></i></button>` : ''}
                 </td>
             </tr>`).join('')}
             </tbody>

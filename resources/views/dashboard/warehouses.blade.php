@@ -9,9 +9,9 @@
 @section('content')
 <div class="page-header d-flex align-items-center justify-content-between">
     <div><h1>Warehouses</h1><p>Manage storage warehouses</p></div>
-    <button class="btn-primary-custom" onclick="openCreateModal()">
-        <i class="bi bi-plus-lg"></i> Add Warehouse
-    </button>
+    @can('warehouses.create')
+        <button class="btn-primary-custom" onclick="openCreateModal()"><i class="bi bi-plus-lg"></i> Add Warehouse</button>
+    @endcan
 </div>
 
 <div class="card">
@@ -126,8 +126,8 @@ function renderTable(items) {
                 <td class="text-muted">${[w.city,w.country].filter(Boolean).join(', ')||'—'}</td>
                 <td>${statusBadge(w.status)}</td>
                 <td>
-                    <button class="btn-sm-icon btn-edit me-1" onclick="editWarehouse(${w.id})"><i class="bi bi-pencil"></i></button>
-                    <button class="btn-sm-icon btn-delete" onclick="deleteWarehouse(${w.id},'${w.name}')"><i class="bi bi-trash"></i></button>
+                    ${canPermission('warehouses.edit') ? `<button class="btn-sm-icon btn-edit me-1" onclick="editWarehouse(${w.id})"><i class="bi bi-pencil"></i></button>` : ''}
+                    ${canPermission('warehouses.delete') ? `<button class="btn-sm-icon btn-delete" onclick="deleteWarehouse(${w.id},'${w.name}')"><i class="bi bi-trash"></i></button>` : ''}
                 </td>
             </tr>`).join('')}
             </tbody>

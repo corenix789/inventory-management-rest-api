@@ -24,6 +24,7 @@
 <!-- Recent Activity Row -->
 <div class="row g-3">
     <!-- Recent Products -->
+    @can('products.view')
     <div class="col-lg-6">
         <div class="card">
             <div class="card-header">
@@ -35,8 +36,10 @@
             </div>
         </div>
     </div>
+    @endcan
 
     <!-- Recent Purchases -->
+    @can('purchases.view')
     <div class="col-lg-6">
         <div class="card">
             <div class="card-header">
@@ -48,8 +51,10 @@
             </div>
         </div>
     </div>
+    @endcan
 
     <!-- Category Distribution -->
+    @can('categories.view')
     <div class="col-lg-4">
         <div class="card h-100">
             <div class="card-header">
@@ -60,13 +65,16 @@
             </div>
         </div>
     </div>
+    @endcan
 
     <!-- Warehouse Summary -->
+    @can('warehouses.view')
     <div class="col-lg-4">
         <div class="card h-100">
             <div class="card-header">
                 <h6 class="card-title"><i class="bi bi-building me-2" style="color:#8b5cf6;"></i>Warehouses</h6>
             </div>
+            @endcan
             <div class="card-body p-0">
                 <div id="warehouseList"><div class="loading-overlay"><div class="spinner-ring"></div></div></div>
             </div>
@@ -121,7 +129,7 @@ const STATS = [
     { key:'taxes',       label:'Tax Rates',         icon:'bi-percent',      color:'rose',    endpoint:'/taxes' },
     { key:'warehouses',  label:'Warehouses',        icon:'bi-building',     color:'violet',  endpoint:'/warehouses' },
     { key:'suppliers',   label:'Suppliers',         icon:'bi-truck',        color:'orange',  endpoint:'/suppliers' },
-    { key:'customers',   label:'Customers',         icon:'bi-people',       color:'teal',    endpoint:'/purchases' },
+    { key:'customers',   label:'Customers',         icon:'bi-people',       color:'teal',    endpoint:'/customers' },
 ];
 
 async function loadDashboard() {
@@ -129,13 +137,13 @@ async function loadDashboard() {
 
     // Fetch all in parallel
     const results = await Promise.all(
-        STATS.map(s => apiRequest(s.endpoint).then(r => ({ ...s, count: extractCount(r.data) })).catch(() => ({ ...s, count: 0 })))
+        STATS.filter(s => canPermission(s.key + '.view')).map(s => apiRequest(s.endpoint).then(r => ({ ...s, count: extractCount(r.data) })).catch(() => ({ ...s, count: 0 })))
     );
 
     // Build stat cards
     grid.innerHTML = results.map((s, i) => `
         <div class="col-xl-3 col-lg-4 col-md-6">
-            <a href="/dashboard/${s.key === 'customers' ? 'purchases' : s.key}" class="text-decoration-none">
+            <a href="/dashboard/${s.key}" class="text-decoration-none">
                 <div class="stat-card ${s.color}" style="animation:fadeIn .3s ease ${i*0.05}s both;">
                     <div class="stat-icon ${s.color}"><i class="bi ${s.icon}"></i></div>
                     <div class="stat-value">${s.count.toLocaleString()}</div>
@@ -146,10 +154,10 @@ async function loadDashboard() {
     `).join('');
 
     // Load panels
-    loadRecentProducts();
-    loadRecentPurchases();
-    loadCategoryList();
-    loadWarehouseList();
+    if (canPermission('products.view')) loadRecentProducts();
+    if (canPermission('purchases.view')) loadRecentPurchases();
+    if (canPermission('categories.view')) loadCategoryList();
+    if (canPermission('warehouses.view')) loadWarehouseList();
     loadQuickInfo();
 }
 
@@ -239,17 +247,17 @@ async function loadWarehouseList() {
 
 async function loadQuickInfo() {
     const [sup, cust, taxes, brands] = await Promise.all([
-        apiRequest('/suppliers').catch(() => ({ data:{} })),
-        apiRequest('/customers').catch(() => ({ data:{} })),
-        apiRequest('/taxes').catch(() => ({ data:{} })),
-        apiRequest('/brands').catch(() => ({ data:{} })),
+        canPermission('suppliers.view') ? apiRequest('/suppliers').catch(() => ({ data:{} })) : { data:{} },
+        canPermission('customers.view') ? apiRequest('/customers').catch(() => ({ data:{} })) : { data:{} },
+        canPermission('taxes.view') ? apiRequest('/taxes').catch(() => ({ data:{} })) : { data:{} },
+        canPermission('brands.view') ? apiRequest('/brands').catch(() => ({ data:{} })) : { data:{} },
     ]);
     const el = document.getElementById('quickInfo');
     el.innerHTML = `
-        <div class="quick-info-row"><span>Active Suppliers</span><span style="color:var(--primary);">${extractCount(sup.data)}</span></div>
-        <div class="quick-info-row"><span>Active Customers</span><span style="color:var(--success);">${extractCount(cust.data)}</span></div>
-        <div class="quick-info-row"><span>Tax Rates</span><span style="color:var(--warning);">${extractCount(taxes.data)}</span></div>
-        <div class="quick-info-row"><span>Brands</span><span style="color:#8b5cf6;">${extractCount(brands.data)}</span></div>
+        ${canPermission('suppliers.view') ? `<div class="quick-info-row"><span>Active Suppliers</span><span style="color:var(--primary);">${extractCount(sup.data)}</span></div>` : ''}
+        ${canPermission('customers.view') ? `<div class="quick-info-row"><span>Active Customers</span><span style="color:var(--success);">${extractCount(cust.data)}</span></div>` : ''}
+        ${canPermission('taxes.view') ? `<div class="quick-info-row"><span>Tax Rates</span><span style="color:var(--warning);">${extractCount(taxes.data)}</span></div>` : ''}
+        ${canPermission('brands.view') ? `<div class="quick-info-row"><span>Brands</span><span style="color:#8b5cf6;">${extractCount(brands.data)}</span></div>` : ''}
         <div class="quick-info-row"><span>API Status</span><span style="color:var(--success);">● Online</span></div>
         <div class="quick-info-row"><span>Last Refresh</span><span style="color:var(--text-muted);">${new Date().toLocaleTimeString()}</span></div>
     `;

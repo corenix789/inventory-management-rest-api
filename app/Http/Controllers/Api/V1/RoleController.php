@@ -9,6 +9,7 @@ use App\Http\Resources\PermissionResource;
 use App\Http\Resources\RoleResource;
 use App\Services\RoleService;
 use App\Traits\ApiResponseTrait;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,19 +25,15 @@ class RoleController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        try {
-            $filters = $request->only(['search', 'status']);
-            $perPage = (int) $request->get('per_page', 15);
+        $filters = $request->only(['search', 'status']);
+        $perPage = (int) $request->get('per_page', 15);
 
-            $roles = $this->roleService->getPaginatedRoles($perPage, $filters);
+        $roles = $this->roleService->getPaginatedRoles($perPage, $filters);
 
-            return $this->success(
-                RoleResource::collection($roles)->response()->getData(true),
-                'Roles retrieved successfully'
-            );
-        } catch (\Throwable $e) {
-            return $this->error('Failed to retrieve roles', 500);
-        }
+        return $this->success(
+            RoleResource::collection($roles)->response()->getData(true),
+            'Roles retrieved successfully'
+        );
     }
 
     /**
@@ -45,12 +42,9 @@ class RoleController extends Controller
      */
     public function store(StoreRoleRequest $request): JsonResponse
     {
-        try {
-            $role = $this->roleService->createRole($request->validated());
-            return $this->created(new RoleResource($role), 'Role created successfully');
-        } catch (\Throwable $e) {
-            return $this->error('Failed to create role: ' . $e->getMessage(), 500);
-        }
+        $role = $this->roleService->createRole($request->validated(), $request->user());
+
+        return $this->created(new RoleResource($role), 'Role created successfully');
     }
 
     /**
@@ -61,11 +55,10 @@ class RoleController extends Controller
     {
         try {
             $roleModel = $this->roleService->getRoleById($role);
+
             return $this->success(new RoleResource($roleModel), 'Role retrieved successfully');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+        } catch (ModelNotFoundException) {
             return $this->notFound('Role not found');
-        } catch (\Throwable $e) {
-            return $this->error('Failed to retrieve role', 500);
         }
     }
 
@@ -76,12 +69,11 @@ class RoleController extends Controller
     public function update(UpdateRoleRequest $request, int $role): JsonResponse
     {
         try {
-            $updated = $this->roleService->updateRole($role, $request->validated());
+            $updated = $this->roleService->updateRole($role, $request->validated(), $request->user());
+
             return $this->success(new RoleResource($updated), 'Role updated successfully');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+        } catch (ModelNotFoundException) {
             return $this->notFound('Role not found');
-        } catch (\Throwable $e) {
-            return $this->error('Failed to update role: ' . $e->getMessage(), 500);
         }
     }
 
@@ -93,11 +85,10 @@ class RoleController extends Controller
     {
         try {
             $this->roleService->deleteRole($role);
+
             return $this->deleted('Role deleted successfully');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+        } catch (ModelNotFoundException) {
             return $this->notFound('Role not found');
-        } catch (\Throwable $e) {
-            return $this->error('Failed to delete role: ' . $e->getMessage(), 500);
         }
     }
 
@@ -108,18 +99,17 @@ class RoleController extends Controller
     public function syncPermissions(Request $request, int $role): JsonResponse
     {
         $request->validate([
-            'permissions'   => 'required|array',
+            'permissions' => 'required|array',
             'permissions.*' => 'integer|exists:permissions,id',
         ]);
 
         try {
-            $this->roleService->syncPermissions($role, $request->permissions);
+            $this->roleService->syncPermissions($role, $request->permissions, $request->user());
             $updatedRole = $this->roleService->getRoleById($role);
+
             return $this->success(new RoleResource($updatedRole), 'Permissions synced successfully');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+        } catch (ModelNotFoundException) {
             return $this->notFound('Role not found');
-        } catch (\Throwable $e) {
-            return $this->error('Failed to sync permissions: ' . $e->getMessage(), 500);
         }
     }
 
@@ -131,14 +121,13 @@ class RoleController extends Controller
     {
         try {
             $permissions = $this->roleService->getRolePermissions($role);
+
             return $this->success(
                 PermissionResource::collection($permissions),
                 'Role permissions retrieved successfully'
             );
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+        } catch (ModelNotFoundException) {
             return $this->notFound('Role not found');
-        } catch (\Throwable $e) {
-            return $this->error('Failed to retrieve permissions', 500);
         }
     }
 }

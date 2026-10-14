@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Interfaces\AuthRepositoryInterface;
+use App\Models\Role;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class WebDashboardController extends Controller
 {
@@ -30,6 +31,7 @@ class WebDashboardController extends Controller
         if (session('auth_token')) {
             return redirect()->route('dashboard.index');
         }
+
         return view('dashboard.login');
     }
 
@@ -40,7 +42,7 @@ class WebDashboardController extends Controller
     public function handleLogin(Request $request): RedirectResponse
     {
         $request->validate([
-            'email'    => 'required|email',
+            'email' => 'required|email',
             'password' => 'required|string|min:1',
         ]);
 
@@ -62,19 +64,39 @@ class WebDashboardController extends Controller
                     ->with('error', 'Please verify your email address before logging in.');
             }
 
+            if (! $user->roles()->exists()) {
+                $viewerRole = Role::active()->where('slug', 'viewer')->first();
+                if (! $viewerRole) {
+                    return back()
+                        ->withInput($request->only('email'))
+                        ->with('error', 'Role permissions are not initialized. Run php artisan db:seed --class=RbacSeeder.');
+                }
+
+                $user->assignRole('viewer');
+            }
+
             // Create Sanctum token
             $token = $user->createToken('dashboard_token')->plainTextToken;
+            $request->session()->regenerate();
 
             session([
                 'auth_token' => $token,
-                'auth_user'  => $user->toArray(),
+                'auth_user' => $user->toArray(),
             ]);
 
             return redirect()->route('dashboard.index')
-                ->with('success', 'Welcome back, ' . $user->name . '!');
+                ->with('success', 'Welcome back, '.$user->name.'!');
 
         } catch (\Throwable $e) {
             report($e);
+
+            \Illuminate\Support\Facades\Log::error('Login failed for email: ' . $request->email, [
+                'exception_class' => get_class($e),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
             return back()
                 ->withInput($request->only('email'))
                 ->with('error', 'Something went wrong. Please try again.');
@@ -89,6 +111,7 @@ class WebDashboardController extends Controller
         if (session('auth_token')) {
             return redirect()->route('dashboard.index');
         }
+
         return view('dashboard.register');
     }
 
@@ -99,33 +122,35 @@ class WebDashboardController extends Controller
     public function handleRegister(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name'                  => 'required|string|min:2|max:255',
-            'email'                 => 'required|email|unique:users,email',
-            'password'              => 'required|string|min:8|confirmed',
+            'name' => 'required|string|min:2|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
             'password_confirmation' => 'required',
         ]);
 
         try {
             // Create user directly via Eloquent
             $user = User::create([
-                'name'     => $validated['name'],
-                'email'    => $validated['email'],
+                'name' => $validated['name'],
+                'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
             ]);
 
             // Create Sanctum token
             $token = $user->createToken('dashboard_token')->plainTextToken;
+            $request->session()->regenerate();
 
             session([
                 'auth_token' => $token,
-                'auth_user'  => $user->toArray(),
+                'auth_user' => $user->toArray(),
             ]);
 
             return redirect()->route('dashboard.index')
-                ->with('success', 'Account created! Welcome, ' . $user->name . '!');
+                ->with('success', 'Account created! Welcome, '.$user->name.'!');
 
         } catch (\Throwable $e) {
             report($e);
+
             return back()
                 ->withInput($request->only('name', 'email'))
                 ->with('error', 'Registration failed. Please try again.');
@@ -142,7 +167,7 @@ class WebDashboardController extends Controller
         if ($token) {
             try {
                 // Revoke token directly via Sanctum
-                $user = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
+                $user = PersonalAccessToken::findToken($token);
                 if ($user) {
                     $user->delete();
                 }
