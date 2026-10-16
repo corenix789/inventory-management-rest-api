@@ -75,8 +75,7 @@ class WarehouseService
         } catch (Throwable $exception) {
 
             Log::error('Warehouse creation failed.', [
-                'message' => $exception->getMessage(),
-                'trace'   => $exception->getTraceAsString(),
+                'exception_class' => $exception::class,
             ]);
 
             throw $exception;
@@ -104,7 +103,7 @@ class WarehouseService
 
             Log::error('Warehouse update failed.', [
                 'warehouse_id' => $warehouse->id,
-                'message'      => $exception->getMessage(),
+                'exception_class' => $exception::class,
             ]);
 
             throw $exception;
@@ -132,7 +131,7 @@ class WarehouseService
 
             Log::error('Warehouse deletion failed.', [
                 'warehouse_id' => $warehouse->id,
-                'message'      => $exception->getMessage(),
+                'exception_class' => $exception::class,
             ]);
 
             throw $exception;
@@ -154,7 +153,7 @@ class WarehouseService
 
             Log::error('Warehouse restore failed.', [
                 'warehouse_id' => $id,
-                'message'      => $exception->getMessage(),
+                'exception_class' => $exception::class,
             ]);
 
             throw $exception;
@@ -176,7 +175,7 @@ class WarehouseService
 
             Log::error('Warehouse force delete failed.', [
                 'warehouse_id' => $id,
-                'message'      => $exception->getMessage(),
+                'exception_class' => $exception::class,
             ]);
 
             throw $exception;

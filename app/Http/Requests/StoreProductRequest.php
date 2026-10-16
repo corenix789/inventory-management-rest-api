@@ -17,6 +17,14 @@ class StoreProductRequest extends FormRequest
 
             'category_id' => 'required|exists:categories,id',
 
+            'brand_id' => 'nullable|integer|exists:brands,id',
+
+            'unit_id' => 'nullable|integer|exists:units,id',
+
+            'tax_id' => 'nullable|integer|exists:taxes,id',
+
+            'warehouse_id' => 'nullable|integer|exists:warehouses,id',
+
             'name' => 'required|string|max:255',
 
             'description' => 'nullable|string',

@@ -23,7 +23,7 @@ class PurchaseResource extends JsonResource
 
             'supplier' => [
                 'id' => $this->supplier?->id,
-                'name' => $this->supplier?->name,
+                'name' => $this->supplier?->company_name,
             ],
 
             'warehouse' => [

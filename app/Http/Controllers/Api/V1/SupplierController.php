@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use Throwable;
-use App\Models\Supplier;
-use Illuminate\Http\JsonResponse;
-use App\Services\SupplierService;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\SupplierResource;
-use App\Http\Resources\SupplierCollection;
 use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
+use App\Http\Resources\SupplierCollection;
+use App\Http\Resources\SupplierResource;
+use App\Models\Supplier;
+use App\Services\SupplierService;
+use Illuminate\Http\JsonResponse;
 
 class SupplierController extends Controller
 {
@@ -36,26 +35,13 @@ class SupplierController extends Controller
      */
     public function store(StoreSupplierRequest $request): JsonResponse
     {
-        try {
+        $supplier = $this->supplierService->create($request->validated());
 
-            $supplier = $this->supplierService->create(
-                $request->validated()
-            );
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Supplier created successfully.',
-                'data' => new SupplierResource($supplier)
-            ], 201);
-
-        } catch (Throwable $e) {
-
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
-
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Supplier created successfully.',
+            'data' => new SupplierResource($supplier),
+        ], 201);
     }
 
     /**
@@ -73,28 +59,13 @@ class SupplierController extends Controller
         UpdateSupplierRequest $request,
         Supplier $supplier
     ): JsonResponse {
+        $supplier = $this->supplierService->update($supplier, $request->validated());
 
-        try {
-
-            $supplier = $this->supplierService->update(
-                $supplier,
-                $request->validated()
-            );
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Supplier updated successfully.',
-                'data' => new SupplierResource($supplier)
-            ]);
-
-        } catch (Throwable $e) {
-
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
-
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Supplier updated successfully.',
+            'data' => new SupplierResource($supplier),
+        ]);
     }
 
     /**
@@ -102,22 +73,11 @@ class SupplierController extends Controller
      */
     public function destroy(Supplier $supplier): JsonResponse
     {
-        try {
+        $this->supplierService->delete($supplier);
 
-            $this->supplierService->delete($supplier);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Supplier deleted successfully.'
-            ]);
-
-        } catch (Throwable $e) {
-
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
-
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Supplier deleted successfully.',
+        ]);
     }
 }

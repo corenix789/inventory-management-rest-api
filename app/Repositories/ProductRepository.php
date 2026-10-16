@@ -10,15 +10,15 @@ class ProductRepository implements ProductRepositoryInterface
 {
     public function getAll(array $filters = []): LengthAwarePaginator
     {
-        $query = Product::with('category');
+        $query = Product::with(['category', 'brand', 'unit', 'tax', 'warehouse']);
 
         // Search
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->search($filters['search']);
         }
 
         // Category Filter
-        if (!empty($filters['category_id'])) {
+        if (! empty($filters['category_id'])) {
             $query->where('category_id', $filters['category_id']);
         }
 
@@ -28,11 +28,11 @@ class ProductRepository implements ProductRepositoryInterface
         }
 
         // Price Range
-        if (!empty($filters['price_from'])) {
+        if (! empty($filters['price_from'])) {
             $query->where('selling_price', '>=', $filters['price_from']);
         }
 
-        if (!empty($filters['price_to'])) {
+        if (! empty($filters['price_to'])) {
             $query->where('selling_price', '<=', $filters['price_to']);
         }
 
@@ -48,7 +48,7 @@ class ProductRepository implements ProductRepositoryInterface
             'created_at',
         ];
 
-        if (!in_array($sortBy, $allowedSorts)) {
+        if (! in_array($sortBy, $allowedSorts)) {
             $sortBy = 'id';
         }
 
@@ -62,7 +62,7 @@ class ProductRepository implements ProductRepositoryInterface
 
     public function findById(int $id): ?Product
     {
-        return Product::with('category')->find($id);
+        return Product::with(['category', 'brand', 'unit', 'tax', 'warehouse'])->find($id);
     }
 
     public function create(array $data): Product

@@ -19,18 +19,19 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
 
-    Route::post('/register', [AuthController::class, 'register'])->name('register');
-    Route::post('/login', [AuthController::class, 'login'])->name('login');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1')->name('register');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login');
 
-    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:3,1');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:3,1');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/profile', [AuthController::class, 'profile']);
         Route::put('/change-password', [AuthController::class, 'changePassword']);
-        Route::post('/email/verification-notification', [EmailVerificationController::class, 'send']);
-        Route::post('/email/resend', [EmailVerificationController::class, 'resend']);
+        Route::post('/email/verification-notification', [EmailVerificationController::class, 'send'])
+            ->middleware('throttle:3,1');
+        Route::post('/email/resend', [EmailVerificationController::class, 'resend'])->middleware('throttle:3,1');
 
         Route::apiResource('categories', CategoryController::class)->middleware('permission:categories');
         Route::apiResource('products', ProductController::class)->middleware('permission:products');

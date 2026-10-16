@@ -33,12 +33,14 @@ Route::get('/reset-password', [ResetPasswordController::class, 'index'])
 |--------------------------------------------------------------------------
 */
 Route::get('/dashboard/login', [WebDashboardController::class, 'showLogin'])->name('dashboard.login');
-Route::post('/dashboard/login', [WebDashboardController::class, 'handleLogin'])->name('dashboard.login.post');
+Route::post('/dashboard/login', [WebDashboardController::class, 'handleLogin'])
+    ->middleware('throttle:5,1')
+    ->name('dashboard.login.post');
 Route::get('/dashboard/register', [WebDashboardController::class, 'showRegister'])->name('dashboard.register');
-Route::post('/dashboard/register', [WebDashboardController::class, 'handleRegister'])->name('dashboard.register.post');
+Route::post('/dashboard/register', [WebDashboardController::class, 'handleRegister'])
+    ->middleware('throttle:5,1')
+    ->name('dashboard.register.post');
 Route::post('/dashboard/logout', [WebDashboardController::class, 'logout'])->name('dashboard.logout');
-// Keep GET logout as fallback (link clicks)
-Route::get('/dashboard/logout', [WebDashboardController::class, 'logout'])->name('dashboard.logout.get');
 
 /*
 |--------------------------------------------------------------------------

@@ -4,47 +4,55 @@ services:
             context: .
             dockerfile: Dockerfile
 
-        container_name: inventory_app
-
         working_dir: /var/www
 
         volumes:
             - .:/var/www
 
         ports:
-            - "8002:8002"
+            - "127.0.0.1:8002:8002"
 
         depends_on:
-            - mysql
+            mysql:
+                condition: service_healthy
 
         command: >
             sh -c "
-            composer install &&
-            php artisan key:generate --force &&
+            composer install --no-interaction --prefer-dist &&
             php artisan serve --host=0.0.0.0 --port=8002
             "
+        healthcheck:
+            test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8002/up || exit 1"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 30s
 
     mysql:
         image: mysql:8.0
 
-        container_name: inventory_mysql
-
         restart: unless-stopped
 
         environment:
-            MYSQL_ROOT_PASSWORD: root
-            MYSQL_DATABASE: inventory_management
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+            MYSQL_DATABASE: ${DB_DATABASE:?Set DB_DATABASE in .env}
+            MYSQL_USER: ${DB_USERNAME:?Set DB_USERNAME in .env}
+            MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
 
         ports:
-            - "3306:3306"
+            - "127.0.0.1:${DB_FORWARD_PORT:-3306}:3306"
 
         volumes:
             - mysql_data:/var/lib/mysql
+        healthcheck:
+            test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 30s
 
     phpmyadmin:
         image: phpmyadmin/phpmyadmin
-
-        container_name: inventory_phpmyadmin
 
         restart: unless-stopped
 
@@ -53,10 +61,11 @@ services:
             PMA_PORT: 3306
 
         ports:
-            - "8083:80"
+            - "127.0.0.1:${PHPMYADMIN_FORWARD_PORT:-8083}:80"
 
         depends_on:
-            - mysql
+            mysql:
+                condition: service_healthy
 
 volumes:
     mysql_data:

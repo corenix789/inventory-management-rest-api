@@ -3,9 +3,9 @@
 namespace App\Services;
 
 use App\Models\Supplier;
+use App\Repositories\Interfaces\SupplierRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Repositories\Interfaces\SupplierRepositoryInterface;
 
 class SupplierService
 {
@@ -52,7 +52,6 @@ class SupplierService
 
             Log::info('Supplier Created', [
                 'supplier_id' => $supplier->id,
-                'company_name' => $supplier->company_name,
             ]);
 
             return $supplier;

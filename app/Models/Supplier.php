@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Supplier extends Model
 {
@@ -51,6 +52,11 @@ class Supplier extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(Purchase::class);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Boot Method
@@ -63,11 +69,11 @@ class Supplier extends Model
 
         static::creating(function ($supplier) {
 
-            if (!$supplier->supplier_code) {
+            if (! $supplier->supplier_code) {
 
                 $lastId = static::max('id') + 1;
 
-                $supplier->supplier_code = 'SUP-' . str_pad($lastId, 5, '0', STR_PAD_LEFT);
+                $supplier->supplier_code = 'SUP-'.str_pad($lastId, 5, '0', STR_PAD_LEFT);
             }
         });
     }

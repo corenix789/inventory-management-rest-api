@@ -3,22 +3,18 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Interfaces\AuthRepositoryInterface;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class WebDashboardController extends Controller
 {
-    public function __construct(
-        protected AuthRepositoryInterface $authRepository
-    ) {}
-
     // ─────────────────────────────────────────────────────────────
     // AUTH PAGES
     // ─────────────────────────────────────────────────────────────
@@ -88,13 +84,8 @@ class WebDashboardController extends Controller
                 ->with('success', 'Welcome back, '.$user->name.'!');
 
         } catch (\Throwable $e) {
-            report($e);
-
-            \Illuminate\Support\Facades\Log::error('Login failed for email: ' . $request->email, [
-                'exception_class' => get_class($e),
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
+            Log::error('Dashboard login failed.', [
+                'exception_class' => $e::class,
             ]);
 
             return back()
@@ -129,15 +120,16 @@ class WebDashboardController extends Controller
         ]);
 
         try {
-            // Create user directly via Eloquent
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-            ]);
+            [$user, $token] = DB::transaction(function () use ($validated): array {
+                $user = User::create([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'password' => Hash::make($validated['password']),
+                ]);
+                $token = $user->createToken('dashboard_token')->plainTextToken;
 
-            // Create Sanctum token
-            $token = $user->createToken('dashboard_token')->plainTextToken;
+                return [$user, $token];
+            });
             $request->session()->regenerate();
 
             session([
@@ -149,7 +141,9 @@ class WebDashboardController extends Controller
                 ->with('success', 'Account created! Welcome, '.$user->name.'!');
 
         } catch (\Throwable $e) {
-            report($e);
+            Log::error('Dashboard registration failed.', [
+                'exception_class' => $e::class,
+            ]);
 
             return back()
                 ->withInput($request->only('name', 'email'))
@@ -165,14 +159,9 @@ class WebDashboardController extends Controller
         $token = session('auth_token');
 
         if ($token) {
-            try {
-                // Revoke token directly via Sanctum
-                $user = PersonalAccessToken::findToken($token);
-                if ($user) {
-                    $user->delete();
-                }
-            } catch (\Exception $e) {
-                // Ignore token revoke errors — still clear session
+            $accessToken = PersonalAccessToken::findToken($token);
+            if ($accessToken && ! $accessToken->delete()) {
+                throw new \RuntimeException('Unable to revoke the dashboard access token.');
             }
         }
 

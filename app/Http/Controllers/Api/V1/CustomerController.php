@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use Throwable;
-use App\Models\Customer;
-use Illuminate\Http\JsonResponse;
-use App\Services\CustomerService;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\CustomerResource;
-use App\Http\Resources\CustomerCollection;
 use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
+use App\Http\Resources\CustomerCollection;
+use App\Http\Resources\CustomerResource;
+use App\Models\Customer;
+use App\Services\CustomerService;
+use Illuminate\Http\JsonResponse;
 
 class CustomerController extends Controller
 {
@@ -36,26 +35,13 @@ class CustomerController extends Controller
      */
     public function store(StoreCustomerRequest $request): JsonResponse
     {
-        try {
+        $customer = $this->customerService->create($request->validated());
 
-            $customer = $this->customerService->create(
-                $request->validated()
-            );
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Customer created successfully.',
-                'data' => new CustomerResource($customer),
-            ], 201);
-
-        } catch (Throwable $e) {
-
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
-
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer created successfully.',
+            'data' => new CustomerResource($customer),
+        ], 201);
     }
 
     /**
@@ -73,28 +59,13 @@ class CustomerController extends Controller
         UpdateCustomerRequest $request,
         Customer $customer
     ): JsonResponse {
+        $customer = $this->customerService->update($customer, $request->validated());
 
-        try {
-
-            $customer = $this->customerService->update(
-                $customer,
-                $request->validated()
-            );
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Customer updated successfully.',
-                'data' => new CustomerResource($customer),
-            ]);
-
-        } catch (Throwable $e) {
-
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
-
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer updated successfully.',
+            'data' => new CustomerResource($customer),
+        ]);
     }
 
     /**
@@ -102,22 +73,11 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer): JsonResponse
     {
-        try {
+        $this->customerService->delete($customer);
 
-            $this->customerService->delete($customer);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Customer deleted successfully.',
-            ]);
-
-        } catch (Throwable $e) {
-
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
-
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer deleted successfully.',
+        ]);
     }
 }

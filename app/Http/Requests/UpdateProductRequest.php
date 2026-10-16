@@ -17,6 +17,14 @@ class UpdateProductRequest extends FormRequest
 
             'category_id' => 'sometimes|exists:categories,id',
 
+            'brand_id' => 'sometimes|nullable|integer|exists:brands,id',
+
+            'unit_id' => 'sometimes|nullable|integer|exists:units,id',
+
+            'tax_id' => 'sometimes|nullable|integer|exists:taxes,id',
+
+            'warehouse_id' => 'sometimes|nullable|integer|exists:warehouses,id',
+
             'name' => 'sometimes|string|max:255',
 
             'description' => 'nullable|string',
