@@ -125,7 +125,7 @@ The PHPUnit configuration uses an isolated in-memory SQLite database by default:
 php artisan test
 ```
 
-In Docker, use `docker compose exec app php artisan test`. CI runs the suite against a dedicated MySQL 8 database created for the workflow.
+In Docker, use `docker compose exec app php artisan test`.
 
 Validate Composer metadata and run Laravel Pint:
 
@@ -134,7 +134,7 @@ composer validate --strict --no-check-publish
 vendor/bin/pint --test path/to/changed-file.php
 ```
 
-The CI workflow runs Pint in check mode on PHP files changed by the push or pull request. A full-repository Pint check currently reports pre-existing style violations outside the changed files. No PHPStan or other static-analysis tool is currently configured.
+A full-repository Pint check currently reports pre-existing style violations outside the changed files. No PHPStan or other static-analysis tool is currently configured. GitHub Actions CI and automated deployment workflows are not enabled in this repository.
 
 ## API authentication
 

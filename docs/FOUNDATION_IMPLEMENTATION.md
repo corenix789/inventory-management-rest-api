@@ -12,7 +12,6 @@ The audit found no verified critical vulnerability, but did find unsafe environm
 ### Created
 
 - `.dockerignore` — excludes local environment files, dependencies, databases, and logs from the Docker build context.
-- `.github/workflows/ci.yml` — adds PHP 8.4 CI with Composer validation/install, an isolated MySQL 8 service, changed-file Pint checks, and the test suite.
 - `database/migrations/2026_10_16_000001_add_product_foreign_keys.php` — adds nullable foreign keys for product brand, unit, tax, warehouse, and audit-user references, using `nullOnDelete`.
 - `tests/Feature/ApiFoundationTest.php` — covers category validation/404, product CRUD, relationship validation/loading, purchase supplier serialization, and transaction rollback.
 - `tests/Feature/AuthenticationApiTest.php` — covers successful/failed login, token response exposure, login throttling, default role assignment, forgotten-password enumeration resistance, reset token revocation, and logout revocation.
@@ -67,23 +66,24 @@ The test and Pint containers were run with `docker compose run --rm --no-deps`; 
 ## Docker and CI status
 
 - `docker-compose.yml` remains a development stack using Laravel's built-in server. MySQL and phpMyAdmin host bindings are localhost-only; the MySQL data volume is persistent.
-- CI is configured to test against a workflow-owned MySQL 8 service with non-production credentials and an ephemeral app key. The workflow has **not** yet run on GitHub.
-- Local tests used in-memory SQLite; the MySQL CI path has not been independently executed in this environment.
-- No PHPStan or other static-analysis tool is configured. Full-repository Pint has baseline findings, so CI checks changed PHP files only.
+- The repository does not currently have GitHub Actions CI or automated deployment workflows. A prior `ci.yml` workflow was removed at the repository owner's request; its historical check results may remain visible in GitHub.
+- Local tests used in-memory SQLite. No MySQL CI path is currently enabled.
+- No PHPStan or other static-analysis tool is configured. Full-repository Pint has baseline findings.
 
 ## Known issues and unresolved blockers
 
-1. **Migration preflight:** the product foreign-key migration may fail if existing product rows reference missing records. Inspect deployment data and resolve inconsistencies through an approved migration before applying it. The migration does not delete or rewrite records.
-2. **Secrets and key lifecycle:** supply unique production secrets through a secret manager. Do not change an `APP_KEY` already in use. Existing `.env` files are not rewritten by these changes.
-3. **Token policy:** Sanctum tokens remain non-expiring by default for compatibility. Set and validate `SANCTUM_EXPIRATION` (minutes) and plan any effect on already-issued tokens before production rollout.
-4. **Session rollout:** session encryption is enabled in the sample only. Existing environments need a valid, stable application key and a planned rollout; do not rotate keys casually.
-5. **Mail and debug settings:** `.env.example` uses `MAIL_MAILER=log` and `APP_DEBUG=true` for local development. Configure protected production mail delivery and disable debug before deployment; the log mailer writes reset links to logs.
-6. **Serving/operations:** Docker Compose runs the development server and includes phpMyAdmin; it is not a production serving, TLS, backup, or monitoring configuration.
-7. **Validation gaps:** collection filter/page-size bounds and resource-level policies are not comprehensive. Route permission middleware remains the current authorization boundary; add record-level policies if ownership or tenancy rules are introduced.
-8. **Error body compatibility:** uncaught customer, supplier, and warehouse errors now use Laravel's exception response instead of bespoke error envelopes or raw exception messages. Successful response contracts and routes are unchanged; clients depending on those failure formats should verify their handling.
-9. **Quality baseline:** unrelated full-repository Pint findings remain. PHPStan is not configured, and remote CI has not yet been observed passing.
-10. **Host toolchain:** use PHP 8.4.1+ for host commands or the provided PHP 8.4 container.
+1. **Workflow status:** GitHub Actions CI and automated deployment are intentionally disabled at the repository owner's request. The `CI / test (push)` workflow file was removed; historical check results may remain visible in GitHub.
+2. **Migration preflight:** the product foreign-key migration may fail if existing product rows reference missing records. Inspect deployment data and resolve inconsistencies through an approved migration before applying it. The migration does not delete or rewrite records.
+3. **Secrets and key lifecycle:** supply unique production secrets through a secret manager. Do not change an `APP_KEY` already in use. Existing `.env` files are not rewritten by these changes.
+4. **Token policy:** Sanctum tokens remain non-expiring by default for compatibility. Set and validate `SANCTUM_EXPIRATION` (minutes) and plan any effect on already-issued tokens before production rollout.
+5. **Session rollout:** session encryption is enabled in the sample only. Existing environments need a valid, stable application key and a planned rollout; do not rotate keys casually.
+6. **Mail and debug settings:** `.env.example` uses `MAIL_MAILER=log` and `APP_DEBUG=true` for local development. Configure protected production mail delivery and disable debug before deployment; the log mailer writes reset links to logs.
+7. **Serving/operations:** Docker Compose runs the development server and includes phpMyAdmin; it is not a production serving, TLS, backup, or monitoring configuration.
+8. **Validation gaps:** collection filter/page-size bounds and resource-level policies are not comprehensive. Route permission middleware remains the current authorization boundary; add record-level policies if ownership or tenancy rules are introduced.
+9. **Error body compatibility:** uncaught customer, supplier, and warehouse errors now use Laravel's exception response instead of bespoke error envelopes or raw exception messages. Successful response contracts and routes are unchanged; clients depending on those failure formats should verify their handling.
+10. **Quality baseline:** unrelated full-repository Pint findings remain. PHPStan is not configured.
+11. **Host toolchain:** use PHP 8.4.1+ for host commands or the provided PHP 8.4 container.
 
 ## Recommended next development phase
 
-Before production deployment, review and apply the product migration against a non-production copy of each target schema, configure secret management, production mail, debug/session/token policies, and a production-grade serving/operations stack, then observe the GitHub MySQL CI workflow passing. After those foundation gates, proceed to the separately planned stock-management engine; sales and other roadmap modules remain out of scope here.
+Before production deployment, review and apply the product migration against a non-production copy of each target schema, configure secret management, production mail, debug/session/token policies, and a production-grade serving/operations stack. If CI is enabled later, validate it against a dedicated test database. After those foundation gates, proceed to the separately planned stock-management engine; sales and other roadmap modules remain out of scope here.
