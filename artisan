@@ -11,7 +11,7 @@ require __DIR__.'/vendor/autoload.php';
 
 // Bootstrap Laravel and handle the command...
 /** @var Application $App */
-$App = require_once __DIR__.'/bootstrap/App.php';
+$App = require_once __DIR__.'/bootstrap/app.php';
 
 $status = $App->handleCommand(new ArgvInput);
 
